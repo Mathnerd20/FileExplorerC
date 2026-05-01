@@ -22,7 +22,7 @@ struct item
 };
 typedef struct item node;
 //function prototypes
-char* getpath(node *cur, char *path); //gets path of file/directory
+void getpath(node *cur, char *path); //gets path of file/directory
 void newf(node *cur); //create new file
 void newd(node **cur); //create new directory
 
@@ -71,14 +71,6 @@ void newf(node *cur)
     new->in = NULL;
 
     //check this stuff again, getting path.
-
-    /*cur = new;
-    strcpy(path, cur->name);
-    while(cur->up != NULL)
-    {
-	snprintf(path, PATH_MAX, "%s/%s", cur->up->name, path);
-	cur = cur->up;
-    }*/
 
     char path[PATH_MAX];
     getpath(new,path);
