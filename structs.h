@@ -81,8 +81,8 @@ void newf(node *cur)
     }*/
 
     char path[PATH_MAX];
-
-    FILE *f = fopen(getpath(new, path), "w");
+    getpath(new,path);
+    FILE *f = fopen(path, "w");
     if(f == NULL)
     {
 	printf("Error couldn't create file");
@@ -112,7 +112,7 @@ void newd(node **cur)
     }
 }
 
-char* getpath(node *cur, char *path)
+void getpath(node *cur, char *path)
 {
     char start[PATH_MAX];
     strcpy(path, cur->name);
@@ -122,5 +122,4 @@ char* getpath(node *cur, char *path)
 	snprintf(path, PATH_MAX, "%s/%s", cur->up->name, start);
 	cur = cur->up;
     }
-    return path;
 }
