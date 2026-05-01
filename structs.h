@@ -1,98 +1,126 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-struct file
+#include<dirent.h>
+#include<sys/stat.h>
+#include <errno.h>
+#include <limits.h>
+typedef enum
 {
-    int info;
-    char name[20];
-    int det; //if det = 0, its a file, det = 1, it is directory
-    struct file *right; //double linked list
-    struct file *left;
-    struct file *in;
-    struct file *up;
+    TYPE_FILE,
+    TYPE_DIR
+} filetype;
+
+struct item
+{
+    filetype det;
+    char name[100];
+    struct item *right;
+    struct item *left;
+    struct item *up;
+    struct item *in;
 };
-typedef struct file item;
+typedef struct item node;
+//function prototypes
+char* getpath(node *cur, char *path); //gets path of file/directory
+void newf(node *cur); //create new file
+void newd(node **cur); //create new directory
 
-item *add(item **root, char a[20])
+void list(node **cur)
 {
-    item *new;
-    new = malloc(sizeof(item));
-    new->name = strcpy(new->name, a);
-    if(*root == NULL) //first file in directory
+    char path[PATH_MAX];
+    if((*cur)->det == TYPE_FILE)
     {
-	*root = new;
-	new->right = NULL;
-	new->left = NULL; 
-	return new;
     }
-    item *tmp = *root;
-    while(tmp->right != NULL)
-    {
-	tmp = (tmp)->right;
-    }
-    (tmp)->right = new;
-    new->left = tmp;
-    new->right = NULL;
-    new->in = NULL;
-    new->up = NULL;
-    if((*root)->det == 1)
-    {
-	new->up = *root;
-    }
-    return new;
 }
 
-void newFile(item **root)
+void newf(node *cur)
 {
-    item *k;
-    char a[20];
-    printf("Enter name of Folder to be added: ");
-    scanf("%s", a);
-    if((*root)->det == 1)
+    if(cur->det == TYPE_FILE)
     {
-	k = add(&((*root)->in), a);
+	printf("Error, can't create file inside file");
+	return;
+    }
+
+    node *new; //assumption: the current pointer is always put at the parent directory
+    new = malloc(sizeof(node));
+
+    if(cur->in == NULL)
+    {
+	new->up = cur;
+	cur->in = new;
+	new->left = NULL;
     }
     else
     {
-	k = add(root);
-    }
-    k->det = 0;
-}
-
-void newDir(item **root)
-{
-    item *k;
-    char a[20];
-    printf("Enter name of File to be added: ");
-    scanf("%s", a);
-    if((*root)->det == 1)
-    {
-	k = add(&((*root)->in));
-    }
-    else
-    {
-	k = add(root);
-    }
-    k->det = 1;
-}
-
-item *cd(item *root)
-{
-    char fld[20];
-    printf("Enter folder name: ");
-    scanf("%s", fld);
-    int found = 0;
-    while(strcmp((root)->name,fld) != 0 && root->next != NULL)
-    {
-	root = root->next;
-	if(strcmp((root)->name,fld) == 0)
+	cur = cur->in;
+	new->up = cur->up;
+	while(cur->right != NULL)
 	{
-	    found = 1;
+	    cur = cur->right;
 	}
+	cur->right = new;
+	new->left = cur;
     }
-    if(found == 1)
+
+    printf("Enter name of file: ");
+    scanf("%s", new->name);
+
+    new->right = NULL;
+    new->det = TYPE_FILE;
+    new->in = NULL;
+
+    //check this stuff again, getting path.
+
+    /*cur = new;
+    strcpy(path, cur->name);
+    while(cur->up != NULL)
     {
-	return root;
+	snprintf(path, PATH_MAX, "%s/%s", cur->up->name, path);
+	cur = cur->up;
+    }*/
+
+    char path[PATH_MAX];
+
+    FILE *f = fopen(getpath(new, path), "w");
+    if(f == NULL)
+    {
+	printf("Error couldn't create file");
     }
-    return NULL;
+    else
+    {
+	fclose(f);
+    }
+}
+
+void newd(node **cur)
+{
+    if(*cur == NULL) //initialize to home directory
+    {
+	node *new;
+	new = malloc(sizeof(node));
+	char *home = getenv("HOME");
+	if(home != NULL)
+	{
+	    strcpy(new->name, home);
+	}
+	new->left = NULL;
+	new->right = NULL;
+	new->up = NULL;
+	new->det = TYPE_DIR;
+	*cur = new;
+    }
+}
+
+char* getpath(node *cur, char *path)
+{
+    char start[PATH_MAX];
+    strcpy(path, cur->name);
+    while(cur->up != NULL)
+    {
+	strcpy(start, path);
+	snprintf(path, PATH_MAX, "%s/%s", cur->up->name, start);
+	cur = cur->up;
+    }
+    return path;
 }
