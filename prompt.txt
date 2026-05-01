@@ -1,0 +1,10 @@
+display file info, etc. in C. I was thinking of using linked lists, the head pointer at root/home directory(~)(Most preffereably home directory to avoid chaos
+   if something goes wrong), the struct has pointers: up(parent), in(child), left and right(siblings). If a something is a file, its "in" pointer is null, a
+   directory is connected to only one of its children(through in pointer and most preferrably the first one) and the rest of the children are connected to each
+   other(through right and left). When i'm adding file in an empty directory, the down pointer points to the newly created file/folder and up pointer of the new
+   file points to the directory and if it's not empty, i will go completely right till i reach the node whose right is null, then modify its right pointer to the
+   new file and set the new file's right pointer to null. To cd into a directory, move the current pointer till you find the provided name, check if its a
+   directory and if it's a directory, access the children through its "in" pointer. To cd to parent directory, move current pointer left until I reach the first
+   node, access its "up" pointer and go to the above level. I also need to store what all the files are there in the home directory in a file. I currently know
+   linked lists very well and can handle double pointers, i also know file operations like fopen, fclose, fscanf, fprintf, fseek, ftell. (don't give me the code,
+   tell me what i need to know to implement this stuff)
