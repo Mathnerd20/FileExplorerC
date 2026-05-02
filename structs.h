@@ -3,8 +3,9 @@
 #include<stdlib.h>
 #include<dirent.h>
 #include<sys/stat.h>
-#include <errno.h>
-#include <limits.h>
+#include<errno.h>
+#include<limits.h>
+
 typedef enum
 {
     TYPE_FILE,
@@ -24,19 +25,133 @@ typedef struct item node;
 
 //function prototypes
 void getpath(node *cur, char *path); //gets path of file/directory
-void newf(node *cur); //create new file
-void newd(node *cur); //create new directory
+void newf(node *cur, char *name, int load); //create new file
+void newd(node *cur, char *name, int load); //create new directory
 void initialize(node **cur); //initializes file system
+void list(node *cur); //list directory contents.
+void Rlist(node *cur); //list directory contents recursively.
+void jumpd(node **cur); //change directory
+void load(node *cur); //load contents of directory on hard drive into my program
 
-void list(node **cur)
+void jumpd(node **cur)
 {
-    char path[PATH_MAX];
     if((*cur)->det == TYPE_FILE)
     {
+	printf("Error, can't enter into a file.\n");
+	return;
+    }
+    char dirName[20];
+    scanf("%s", dirName);
+    if(strcmp(dirName, "..") == 0) //jump into parent
+    {
+	if((*cur)->up != NULL)
+	{
+	    *cur = (*cur)->up;
+	}
+	else
+	{
+	    printf("Already at top most directory \n");
+	}
+	return;
+    }
+    node *temp = *cur;
+    temp = temp->in;
+
+    //finding the directory
+    while(temp != NULL && strcmp(temp->name, dirName) != 0)
+    {
+	temp = temp->right;
+    }
+    if(temp != NULL)
+    {
+	if((*cur)->det == TYPE_DIR)
+	{
+	    *cur = temp;
+	    load(*cur); //loads the contents of the new directory into the tree.
+	}
+	else
+	{
+	    printf("%s is not a directory \n", (*cur)->name);
+	}
+    }
+    else
+    {
+	printf("Error, directory not found! \n");
     }
 }
 
-void newf(node *cur) 
+void load(node *cur)
+{
+    if(cur->in != NULL)
+    {
+	return;
+    }
+    if(cur->det == TYPE_FILE)
+    {
+	printf("Error, can't load files of a file \n");
+	return;
+    }
+    char path[PATH_MAX];
+    getpath(cur, path);
+    DIR *d;
+    d = opendir(path);
+    if(d == NULL)
+    {
+	return;
+    }
+    struct dirent *item;
+    struct stat stbuf;
+    while((item = readdir(d)) != NULL)
+    {
+	if(strcmp(item->d_name, ".") == 0 || strcmp(item->d_name, "..") == 0)
+	{
+	    continue;
+	}
+	char itemPath[PATH_MAX];
+	snprintf(itemPath, PATH_MAX, "%s/%s", path, item->d_name);
+	stat(itemPath, &stbuf);
+
+	if(S_ISDIR(stbuf.st_mode))
+	{
+	    newd(cur, item->d_name, 1);
+	}
+	else
+	{
+	    newf(cur, item->d_name, 1);
+	}
+    }
+}
+
+
+void list(node *cur)
+{
+    if(cur->det == TYPE_FILE)
+    {
+	printf("Error, can't list a file \n");
+	return;
+    }
+    if(cur->in == NULL)
+    {
+	printf("Directory Empty \n");
+    }
+    cur = cur->in;
+    while(cur != NULL)
+    {
+	if(cur->det == TYPE_FILE)
+	{
+	    printf("%s ", cur->name);
+	}
+	else
+	{
+	    printf("\x1B[34m %s \x1B[0m ", cur->name);
+	}
+	//printf("%s %s\n", (cur->det == TYPE_DIR ? "[DIR] " : "[FILE]"), cur->name);
+	cur = cur->right;
+    }
+    printf("\n");
+}
+
+void newf(node *cur, char *name, int load) //if load = 0, it creates an actual file in directory, if 1 then it just makes the virtual file
 {
     if(cur == NULL)
     {
@@ -75,20 +190,21 @@ void newf(node *cur)
     new->in = NULL;
     new->det = TYPE_FILE;
 
-    printf("Enter name of file: ");
-    scanf("%s", new->name);
+    strcpy(new->name, name);
 
-    char path[PATH_MAX]; //storing path of file
-    getpath(new,path);
-
-    FILE *f = fopen(path, "w");
-    if(f == NULL)
+    if(!load)
     {
-	printf("Error couldn't create file");
-    }
-    else
-    {
-	fclose(f);
+	char path[PATH_MAX]; //storing path of file
+	getpath(new,path);
+	FILE *f = fopen(path, "w");
+	if(f == NULL)
+	{
+	    printf("Error couldn't create file");
+	}
+	else
+	{
+	    fclose(f);
+	}
     }
 }
 
@@ -101,7 +217,7 @@ void initialize(node **cur)
 	char *home = getenv("HOME");
 	if(home != NULL)
 	{
-	    strcpy(new->name, home);
+	    strcpy(new->name, home); //path of home directory copied into name
 	}
 	new->left = NULL;
 	new->right = NULL;
@@ -118,7 +234,7 @@ void initialize(node **cur)
     }
 }
 
-void newd(node *cur) //new directory
+void newd(node *cur, char *name, int load) //new directory
 {
     if(cur != NULL)
     {
@@ -155,12 +271,14 @@ void newd(node *cur) //new directory
 
 	new->det = TYPE_DIR;
 
-	printf("Enter name of directory: ");
-	scanf("%s", new->name);
+	strcpy(new->name, name);
 
-	char path[PATH_MAX];
-	getpath(new, path);
-	mkdir(path, 0777);
+	if(!load)
+	{
+	    char path[PATH_MAX];
+	    getpath(new, path);
+	    mkdir(path, 0777);
+	}
     }
 }
 

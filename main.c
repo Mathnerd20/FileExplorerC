@@ -6,25 +6,29 @@ int main()
     printf("> ");
     node *curr = NULL;
     initialize(&curr);
+    load(curr);
     char cmd[20];
     scanf("%s", cmd);
     while(strcmp(cmd, "quit") != 0)
     {
+	char name[20];
 	if(strcmp(cmd,"list") == 0) //list contents in current directory
 	{
-
+	    list(curr);
 	}
 	else if(strcmp(cmd,"newf") == 0) //add new file
 	{
-	    newf(curr);
+	    scanf("%s", name);
+	    newf(curr, name, 0);
 	}
 	else if(strcmp(cmd,"newd") == 0) //add new directory
 	{
-	    newd(curr);
+	    scanf("%s", name);
+	    newd(curr, name, 0);
 	}
 	else if(strcmp(cmd,"jumpd") == 0) //change to directory in current directory
 	{
-
+	    jumpd(&curr);
 	}
 	else if(strcmp(cmd,"see") == 0) //view contents of file.
 	{
@@ -34,7 +38,11 @@ int main()
 	}
 	else if(strcmp(cmd,"help") == 0) //Give list of commands
 	{
-	    printf("Avaliable functions are \n newf - Add newfile to current directory \n newd - Add new directory to current directory \n quit - to quit the program \n"); 
+	    printf("Avaliable functions are \n newf - Add newfile to current directory \n newd - Add new directory to current directory \n jumpd - change directory \n list - list all contents of current directory \n quit - to quit the program \n"); 
+	}
+	else
+	{
+	    printf("Invalid command ! \n");
 	}
 	printf("> ");
 	scanf("%s", cmd);
