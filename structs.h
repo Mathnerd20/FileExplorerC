@@ -21,10 +21,12 @@ struct item
     struct item *in;
 };
 typedef struct item node;
+
 //function prototypes
 void getpath(node *cur, char *path); //gets path of file/directory
 void newf(node *cur); //create new file
-void newd(node **cur); //create new directory
+void newd(node *cur); //create new directory
+void initialize(node **cur); //initializes file system
 
 void list(node **cur)
 {
@@ -34,8 +36,14 @@ void list(node **cur)
     }
 }
 
-void newf(node *cur)
+void newf(node *cur) 
 {
+    if(cur == NULL)
+    {
+	printf("File system not initialized");
+	return;
+    }
+
     if(cur->det == TYPE_FILE)
     {
 	printf("Error, can't create file inside file");
@@ -45,7 +53,7 @@ void newf(node *cur)
     node *new; //assumption: the current pointer is always put at the parent directory
     new = malloc(sizeof(node));
 
-    if(cur->in == NULL)
+    if(cur->in == NULL) //empty directory
     {
 	new->up = cur;
 	cur->in = new;
@@ -63,17 +71,16 @@ void newf(node *cur)
 	new->left = cur;
     }
 
+    new->right = NULL;
+    new->in = NULL;
+    new->det = TYPE_FILE;
+
     printf("Enter name of file: ");
     scanf("%s", new->name);
 
-    new->right = NULL;
-    new->det = TYPE_FILE;
-    new->in = NULL;
-
-    //check this stuff again, getting path.
-
-    char path[PATH_MAX];
+    char path[PATH_MAX]; //storing path of file
     getpath(new,path);
+
     FILE *f = fopen(path, "w");
     if(f == NULL)
     {
@@ -85,7 +92,7 @@ void newf(node *cur)
     }
 }
 
-void newd(node **cur)
+void initialize(node **cur)
 {
     if(*cur == NULL) //initialize to home directory
     {
@@ -99,8 +106,61 @@ void newd(node **cur)
 	new->left = NULL;
 	new->right = NULL;
 	new->up = NULL;
-	new->det = TYPE_DIR;
+	new->right = NULL;
+	new->in = NULL;
 	*cur = new;
+	new->det = TYPE_DIR;
+    }
+    else
+    {
+	printf("Already initialized");
+	return;
+    }
+}
+
+void newd(node *cur) //new directory
+{
+    if(cur != NULL)
+    {
+	if(cur->det == TYPE_FILE)
+	{
+	    printf("Can't add directory to file");
+	    return;
+	}
+
+	node *new;
+	new = malloc(sizeof(node));
+
+	if(cur->in == NULL)
+	{
+	    new->up = cur;
+	    cur->in = new;
+	    new->left = NULL;
+	}
+
+	else
+	{
+	    cur = cur->in;
+	    new->up = cur->up;
+	    while(cur->right != NULL)
+	    {
+		cur = cur->right;
+	    }
+	    cur->right = new;
+	    new->left = cur;
+	}
+
+	new->right = NULL;
+	new->in = NULL;
+
+	new->det = TYPE_DIR;
+
+	printf("Enter name of directory: ");
+	scanf("%s", new->name);
+
+	char path[PATH_MAX];
+	getpath(new, path);
+	mkdir(path, 0777);
     }
 }
 

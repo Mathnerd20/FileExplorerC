@@ -2,10 +2,10 @@
 
 int main()
 {
-    printf("Welcome to file explorer program! \n");
+    printf("Welcome to file explorer program! Type 'help' for help and 'quit' to quit \n");
     printf("> ");
     node *curr = NULL;
-    newd(&curr);
+    initialize(&curr);
     char cmd[20];
     scanf("%s", cmd);
     while(strcmp(cmd, "quit") != 0)
@@ -20,7 +20,7 @@ int main()
 	}
 	else if(strcmp(cmd,"newd") == 0) //add new directory
 	{
-
+	    newd(curr);
 	}
 	else if(strcmp(cmd,"jumpd") == 0) //change to directory in current directory
 	{
@@ -31,6 +31,10 @@ int main()
 	}
 	else if(strcmp(cmd,"getinfo") == 0) //give metadata of file.
 	{
+	}
+	else if(strcmp(cmd,"help") == 0) //Give list of commands
+	{
+	    printf("Avaliable functions are \n newf - Add newfile to current directory \n newd - Add new directory to current directory \n quit - to quit the program \n"); 
 	}
 	printf("> ");
 	scanf("%s", cmd);
