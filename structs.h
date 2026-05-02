@@ -5,6 +5,7 @@
 #include<sys/stat.h>
 #include<errno.h>
 #include<limits.h>
+#include<time.h>
 
 typedef enum
 {
@@ -29,10 +30,54 @@ void newf(node *cur, char *name, int load); //create new file
 void newd(node *cur, char *name, int load); //create new directory
 void initialize(node **cur); //initializes file system
 void list(node *cur); //list directory contents.
-void Rlist(node *cur); //list directory contents recursively.
 void jumpd(node **cur); //change directory
 void load(node *cur); //load contents of directory on hard drive into my program
+void rmfile(node *cur); //remove file
+void rmdir(node *cur); //remove directory
+void getinfo(node *cur); //give metadata
+void whereami(node *cur); //similar to pwd, just prints the path of the current directory
 
+//optional
+//modify jumpd function so that it can jump to a path
+void copy(node *cur);
+void move(node *cur); 
+void Rlist(node *cur); //list directory contents recursively. Actuall function not needed, just add a recursive call to list whenever a directory is encountered
+
+void whereami(node *cur)
+{
+    char path[PATH_MAX];
+    getpath(cur, path);
+    printf("%s \n", path);
+}
+
+void getinfo(node *cur)
+{
+    char itemName[100];
+    scanf("%s", itemName);
+    cur = cur->in;
+    while(cur != NULL && strcmp(cur->name, itemName) != 0)
+    {
+	cur = cur->right;
+    }
+    if(cur != NULL)
+    {
+	char path[PATH_MAX];
+	getpath(cur, path);
+
+	struct stat stbuf;
+	stat(path, &stbuf);
+
+	printf("Name: %s \n", cur->name);
+	printf("Type: %s \n",(cur->det == TYPE_DIR ? "Directory " : "File"));
+	// printf("Owner user id: %6ld \n", stbuf.st_uid);
+	printf("File size: %lld \n", (long long)stbuf.st_size);
+	printf("Last Modified: %s", ctime(&stbuf.st_mtime));
+    }
+    else
+    {
+	printf("File not found \n");
+    }
+}
 void jumpd(node **cur)
 {
     if((*cur)->det == TYPE_FILE)
@@ -40,7 +85,7 @@ void jumpd(node **cur)
 	printf("Error, can't enter into a file.\n");
 	return;
     }
-    char dirName[20];
+    char dirName[100];
     scanf("%s", dirName);
     if(strcmp(dirName, "..") == 0) //jump into parent
     {

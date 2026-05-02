@@ -30,15 +30,20 @@ int main()
 	{
 	    jumpd(&curr);
 	}
+	else if(strcmp(cmd,"whereami") == 0) //print current directory
+	{
+	    whereami(curr);
+	}
 	else if(strcmp(cmd,"see") == 0) //view contents of file.
 	{
 	}
 	else if(strcmp(cmd,"getinfo") == 0) //give metadata of file.
 	{
+	    getinfo(curr);
 	}
 	else if(strcmp(cmd,"help") == 0) //Give list of commands
 	{
-	    printf("Avaliable functions are \n newf - Add newfile to current directory \n newd - Add new directory to current directory \n jumpd - change directory \n list - list all contents of current directory \n quit - to quit the program \n"); 
+	    printf("Avaliable functions are \n whereami - print current working directory \n newf - Add newfile to current directory \n newd - Add new directory to current directory \n jumpd - change directory \n list - list all contents of current directory \n getinfo - provide info on file \n quit - to quit the program \n"); 
 	}
 	else
 	{
