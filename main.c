@@ -11,7 +11,7 @@ int main()
     scanf("%s", cmd);
     while(strcmp(cmd, "quit") != 0)
     {
-	char name[20];
+	char name[100];
 	if(strcmp(cmd,"list") == 0) //list contents in current directory
 	{
 	    list(curr);
@@ -36,7 +36,8 @@ int main()
 	}
 	else if(strcmp(cmd,"rm") == 0) //remove file or emptry directory
 	{
-	    rm(curr);
+	    scanf("%s", name);
+	    rm(curr, name);
 	}
 	else if(strcmp(cmd,"see") == 0) //view contents of file.
 	{

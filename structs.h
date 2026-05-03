@@ -36,7 +36,7 @@ void load(node *cur); //load contents of directory on hard drive into my program
 void rm(node *cur); //remove file or empty directory
 void getinfo(node *cur); //give metadata
 void whereami(node *cur); //similar to pwd, just prints the path of the current directory
-void see(node *cur);
+void see(node *cur); //view contents of file
 
 //optional
 //modify jumpd function so that it can jump to a path
@@ -102,6 +102,7 @@ void getinfo(node *cur)
 
 	printf("Name: %s \n", cur->name);
 	printf("Type: %s \n",(cur->det == TYPE_DIR ? "Directory " : "File"));
+	printf("Mode (Permissions): %o\n", stbuf.st_mode & 0777);
 	// printf("Owner user id: %6ld \n", stbuf.st_uid);
 	printf("File size: %lld \n", (long long)stbuf.st_size);
 	printf("Last Modified: %s", ctime(&stbuf.st_mtime));
@@ -112,11 +113,9 @@ void getinfo(node *cur)
     }
 }
 
-void rm(node *cur)
+void rm(node *cur, char *fileName)
 {
     cur = cur->in;
-    char fileName[100];
-    scanf("%s", fileName);
     while(cur != NULL && strcmp(cur->name, fileName) != 0)
     {
 	cur = cur->right;
