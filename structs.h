@@ -6,6 +6,7 @@
 #include<errno.h>
 #include<limits.h>
 #include<time.h>
+#include<unistd.h>
 
 typedef enum
 {
@@ -32,10 +33,10 @@ void initialize(node **cur); //initializes file system
 void list(node *cur); //list directory contents.
 void jumpd(node **cur); //change directory
 void load(node *cur); //load contents of directory on hard drive into my program
-void rmfile(node *cur); //remove file
-void rmdir(node *cur); //remove directory
+void rm(node *cur); //remove file or empty directory
 void getinfo(node *cur); //give metadata
 void whereami(node *cur); //similar to pwd, just prints the path of the current directory
+void see(node *cur);
 
 //optional
 //modify jumpd function so that it can jump to a path
@@ -48,6 +49,38 @@ void whereami(node *cur)
     char path[PATH_MAX];
     getpath(cur, path);
     printf("%s \n", path);
+}
+
+void see(node *cur)
+{
+    char itemName[100];
+    scanf("%s", itemName);
+    cur = cur->in;
+    while(cur != NULL && strcmp(cur->name, itemName) != 0)
+    {
+	cur = cur->right;
+    }
+    if(cur != NULL && cur->det == TYPE_FILE)
+    {
+	char path[PATH_MAX];
+	getpath(cur, path);
+	FILE *f = fopen(path, "r");
+	if(f == NULL)
+	{
+	    printf("Can't open file");
+	    return;
+	}
+	int c;
+	while((c = getc(f)) != EOF)
+	{
+	    putc(c, stdout);
+	}
+	fclose(f);
+    }
+    else
+    {
+	printf("File not found \n");
+    }
 }
 
 void getinfo(node *cur)
@@ -78,6 +111,64 @@ void getinfo(node *cur)
 	printf("File not found \n");
     }
 }
+
+void rm(node *cur)
+{
+    cur = cur->in;
+    char fileName[100];
+    scanf("%s", fileName);
+    while(cur != NULL && strcmp(cur->name, fileName) != 0)
+    {
+	cur = cur->right;
+    }
+    if(cur != NULL && cur->in == NULL)
+    {
+	node *tmp = cur;
+	if(cur->left == NULL && cur->up != NULL)
+	{
+	    cur->up->in = cur->right;
+	    if(cur->right != NULL)
+	    {
+		cur->right->left = NULL;
+	    }
+	}
+	else if(cur->right != NULL)
+	{
+	    cur->right->left = cur->left;
+	    cur->left->right = cur->right;
+	}
+	else
+	{
+	    cur->left->right = NULL;
+	}
+	char path[PATH_MAX];
+	getpath(tmp, path);
+	if(cur->det == TYPE_FILE)
+	{
+	    if(unlink(path) == -1)
+	    {
+		printf("Error removing file");
+	    }
+	}
+	else
+	{
+	    if(rmdir(path) == -1)
+		printf("Error removing directory");
+	}
+	free(tmp);
+    }
+    else if(cur == NULL)
+    {
+	printf("Error, file %s not found", fileName);
+	return;
+    }
+    else if (cur->det == TYPE_DIR)
+    {
+	printf("Error directory is not empty \n");
+	return;
+    }
+}
+
 void jumpd(node **cur)
 {
     if((*cur)->det == TYPE_FILE)
@@ -178,6 +269,7 @@ void list(node *cur)
     if(cur->in == NULL)
     {
 	printf("Directory Empty \n");
+	return;
     }
     cur = cur->in;
     while(cur != NULL)
@@ -281,50 +373,56 @@ void initialize(node **cur)
 
 void newd(node *cur, char *name, int load) //new directory
 {
-    if(cur != NULL)
+    if(cur == NULL)
     {
-	if(cur->det == TYPE_FILE)
+	return;
+    }
+
+    if(cur->det == TYPE_FILE)
+    {
+	printf("Can't add directory to file");
+	return;
+    }
+
+    node *new;
+    new = malloc(sizeof(node));
+
+    if(cur->in == NULL)
+    {
+	new->up = cur;
+	cur->in = new;
+	new->left = NULL;
+    }
+
+    else
+    {
+	cur = cur->in;
+	new->up = cur->up;
+	while(cur->right != NULL)
 	{
-	    printf("Can't add directory to file");
-	    return;
+	    cur = cur->right;
 	}
+	cur->right = new;
+	new->left = cur;
+    }
 
-	node *new;
-	new = malloc(sizeof(node));
+    new->right = NULL;
+    new->in = NULL;
 
-	if(cur->in == NULL)
+    new->det = TYPE_DIR;
+
+    strcpy(new->name, name);
+
+    if(!load)
+    {
+	char path[PATH_MAX];
+	getpath(new, path);
+	if(mkdir(path, 0777) == -1)
 	{
-	    new->up = cur;
-	    cur->in = new;
-	    new->left = NULL;
-	}
-
-	else
-	{
-	    cur = cur->in;
-	    new->up = cur->up;
-	    while(cur->right != NULL)
-	    {
-		cur = cur->right;
-	    }
-	    cur->right = new;
-	    new->left = cur;
-	}
-
-	new->right = NULL;
-	new->in = NULL;
-
-	new->det = TYPE_DIR;
-
-	strcpy(new->name, name);
-
-	if(!load)
-	{
-	    char path[PATH_MAX];
-	    getpath(new, path);
-	    mkdir(path, 0777);
+	    printf("Error creating directory");
 	}
     }
+    
 }
 
 void getpath(node *cur, char *path)
