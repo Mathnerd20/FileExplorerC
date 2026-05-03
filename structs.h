@@ -33,7 +33,7 @@ void initialize(node **cur); //initializes file system
 void list(node *cur); //list directory contents.
 void jumpd(node **cur); //change directory
 void load(node *cur); //load contents of directory on hard drive into my program
-void rm(node *cur); //remove file or empty directory
+void rm(node *cur, char *name); //remove file or empty directory
 void getinfo(node *cur); //give metadata
 void whereami(node *cur); //similar to pwd, just prints the path of the current directory
 void see(node *cur); //view contents of file
