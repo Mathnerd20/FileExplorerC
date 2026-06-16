@@ -7,6 +7,7 @@
 #include<limits.h>
 #include<time.h>
 #include<unistd.h>
+#include<sys/ioctl.h>
 
 typedef enum
 {
@@ -24,6 +25,7 @@ struct item
     struct item *in;
 };
 typedef struct item node;
+struct winsize window;
 
 //function prototypes
 void getpath(node *cur, char *path); //gets path of file/directory
@@ -37,6 +39,7 @@ void rm(node *cur, char *name); //remove file or empty directory
 void getinfo(node *cur); //give metadata
 void whereami(node *cur); //similar to pwd, just prints the path of the current directory
 void see(node *cur); //view contents of file
+void clear(); //clear terminal
 
 //optional
 //modify jumpd function so that it can jump to a path
@@ -258,8 +261,14 @@ void load(node *cur)
 }
 
 
+void clear()
+{
+    printf("\033[?1049h");
+    printf("\033[H");
+}
 void list(node *cur)
 {
+    int limit = (window.ws_col-4)/40;
     if(cur->det == TYPE_FILE)
     {
 	printf("Error, can't list a file \n");
@@ -271,18 +280,25 @@ void list(node *cur)
 	return;
     }
     cur = cur->in;
+    int col = 0;
     while(cur != NULL)
     {
+	printf("\033[%dG", 4 + ((col++) * 40));
 	if(cur->det == TYPE_FILE)
 	{
-	    printf("%s ", cur->name);
+	    printf("%s", cur->name);
 	}
 	else
 	{
-	    printf("\x1B[34m %s \x1B[0m ", cur->name);
+	    printf("\x1B[34m%s\x1B[0m ", cur->name);
 	}
 	//printf("%s %s\n", (cur->det == TYPE_DIR ? "[DIR] " : "[FILE]"), cur->name);
 	cur = cur->right;
+	if(col == limit)
+	{
+	    printf("\n");
+	    col = 0;
+	}
     }
     printf("\n");
 }

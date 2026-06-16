@@ -2,11 +2,13 @@
 
 int main()
 {
+    clear();
     printf("Welcome to file explorer program! Type 'help' for help and 'quit' to quit \n");
     printf("> ");
     node *curr = NULL;
     initialize(&curr);
     load(curr);
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
     char cmd[20];
     scanf("%s", cmd);
     while(strcmp(cmd, "quit") != 0)
@@ -20,6 +22,10 @@ int main()
 	{
 	    scanf("%s", name);
 	    newf(curr, name, 0);
+	}
+	else if(strcmp(cmd,"clear") == 0) //clear terminal
+	{
+	    clear();
 	}
 	else if(strcmp(cmd,"newd") == 0) //add new directory
 	{
@@ -58,4 +64,5 @@ int main()
 	printf("> ");
 	scanf("%s", cmd);
     }
+    printf("\033[?1049l");
 }
