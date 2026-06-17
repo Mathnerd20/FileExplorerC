@@ -263,8 +263,8 @@ void load(node *cur)
 
 void clear()
 {
-    printf("\033[?1049h");
-    printf("\033[H");
+    printf("\033[2J\033[H");
+    fflush(stdout);
 }
 void list(node *cur)
 {
